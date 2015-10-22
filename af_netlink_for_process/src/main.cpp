@@ -162,42 +162,6 @@ bool GetTCPState(int32_t family, int32_t fd) {
 	return true;
 }
 
-struct user_ent {
-	struct user_ent *next;
-	unsigned int ino;
-	int pid;
-	int fd;
-	char process[0];
-};
-#define USER_ENT_HASH_SIZE	256
-struct user_ent *user_ent_hash[USER_ENT_HASH_SIZE];
-
-static int user_ent_hashfn(unsigned int ino) {
-	int val = (ino >> 24) ^ (ino >> 16) ^ (ino >> 8) ^ ino;
-
-	return val & (USER_ENT_HASH_SIZE - 1);
-}
-
-void user_ent_add(unsigned int ino, const char *process, int pid, int fd) {
-	struct user_ent *p, **pp;
-	int str_len;
-
-	str_len = strlen(process) + 1;
-	p = (struct user_ent*) malloc(sizeof (struct user_ent) +str_len);
-	if (!p)
-		abort();
-	p->next = NULL;
-	p->ino = ino;
-	p->pid = pid;
-	p->fd = fd;
-	strcpy(p->process, process);
-
-	pp = &user_ent_hash[user_ent_hashfn(ino)];
-	p->next = *pp;
-	*pp = p;
-	printf("%d\n", ino);
-}
-
 void getProcOpenSock(int32_t pid) {
 	char dir_name[256];
 	sprintf(dir_name, "/proc/%d/fd", pid);
@@ -233,16 +197,11 @@ int main(int argc, char** argv) {
 		}
 		printf("Size of map is: %d\n", ino_pid.size());
 		bool rs = GetTCPState(family, fd);
-		//	printf("est: %d\n twait: %d \n cwait: %d \n fwait: %d\n", _networkstat->tcpConnEstaplished,
-		//			_networkstat->tcpConnTimeWait, _networkstat->tcpConnCloseWait, _networkstat->tcpConnFinWait);
 		close(fd);
 
 		printf("tcpConnEstaplished: %d\t tcpConnFinWait:%d\t tcpConnTimeWait:%d\t  tcpConnCloseWait: %d\n",
 				tcpConnEstaplished, tcpConnFinWait, tcpConnTimeWait, tcpConnCloseWait);
 		sleep(1);
 	}
-
-
-
 	return 0;
 }
